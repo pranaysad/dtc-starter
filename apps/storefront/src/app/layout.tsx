@@ -1,6 +1,7 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import Script from "next/script"
+import SentryProvider from "./sentry-provider"
 import "styles/globals.css"
 
 const GA_MEASUREMENT_ID = "G-CG6MER6SZM"
@@ -25,6 +26,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
+        <Script src="/static/autotrack.js" strategy="afterInteractive" />
+        <SentryProvider />
         <main className="relative">{props.children}</main>
       </body>
     </html>
