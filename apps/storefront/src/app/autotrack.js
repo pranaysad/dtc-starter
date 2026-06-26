@@ -88,6 +88,16 @@ function codevalErrorNode(basePayload) {
   );
 }
 
+function codevalMixpanelEvent(name, payload) {
+  try {
+    if (window.mixpanel && typeof window.mixpanel.track === 'function') {
+      window.mixpanel.track(name, payload);
+    }
+  } catch (err) {
+    // Never break the user's site
+  }
+}
+
 function codevalTrackErrorEvent(name, label, payload) {
   const basePayload = {
     ...payload,
@@ -95,14 +105,17 @@ function codevalTrackErrorEvent(name, label, payload) {
     tag: codevalAutoTrackConfig.tag
   };
   const node = codevalErrorNode(basePayload);
-  codevalGtagEvent(name, basePayload);
-  codevalGtagEvent(codevalAutoTrackConfig.mirrorEventName, {
+  const mirrorPayload = {
     button_name: label,
     function_name: node,
     callgraph_node: node,
     file_path: window.location.pathname,
     ...basePayload
-  });
+  };
+  codevalGtagEvent(name, basePayload);
+  codevalMixpanelEvent(name, basePayload);
+  codevalGtagEvent(codevalAutoTrackConfig.mirrorEventName, mirrorPayload);
+  codevalMixpanelEvent(codevalAutoTrackConfig.mirrorEventName, mirrorPayload);
 }
 
 function codevalCleanText(value, maxLength = codevalAutoTrackConfig.maxTextLength) {
