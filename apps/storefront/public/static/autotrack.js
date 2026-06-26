@@ -247,11 +247,13 @@ document.addEventListener('click', (e) => {
       ts: Date.now()
     };
 
-    codevalGtagEvent('cv_click', {
+    const clickPayload = {
       element_name: name,
       dom_path: domPath,
       tag: codevalAutoTrackConfig.tag
-    });
+    };
+    codevalGtagEvent('cv_click', clickPayload);
+    codevalMixpanelEvent('cv_click', clickPayload);
   } catch (err) {
     // Fail silently - never break the user's site
   }
