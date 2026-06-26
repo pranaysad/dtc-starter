@@ -188,6 +188,33 @@ function codevalSourceName(element) {
   );
 }
 
+function codevalDomPath(element, maxDepth = 6) {
+  if (!(element instanceof Element)) return '';
+  const parts = [];
+  let node = element;
+  let depth = 0;
+  while (node && node.nodeType === 1 && depth < maxDepth) {
+    let part = node.tagName.toLowerCase();
+    if (node.id) {
+      parts.unshift(`${part}#${node.id}`);
+      break;
+    }
+    const firstClass = typeof node.className === 'string' ? node.className.trim().split(/\s+/)[0] : '';
+    if (firstClass) part += `.${firstClass}`;
+    const parent = node.parentElement;
+    if (parent) {
+      const siblings = Array.from(parent.children).filter((sibling) => sibling.tagName === node.tagName);
+      if (siblings.length > 1) {
+        part += `:nth-of-type(${siblings.indexOf(node) + 1})`;
+      }
+    }
+    parts.unshift(part);
+    node = parent;
+    depth += 1;
+  }
+  return codevalCleanText(parts.join(' > '), 200);
+}
+
 const codevalRecentUiMessages = new Map();
 function codevalTrackUiMessage(message, sourceElement, severity = 'error') {
   const errorMessage = codevalCleanText(message);
@@ -212,14 +239,17 @@ document.addEventListener('click', (e) => {
     const source = e.target instanceof Element ? e.target : e.target?.parentElement;
     const el = source?.closest?.('button, a, [role="button"], input, select, textarea, label, summary, [onclick], [data-codeval-name], [data-analytics-name], [data-testid]') || source;
     const name = codevalElementName(el) || 'unknown_click';
+    const domPath = codevalDomPath(el);
 
     window.__codevalLastClick = {
       element_name: name,
+      dom_path: domPath,
       ts: Date.now()
     };
 
     codevalGtagEvent('cv_click', {
       element_name: name,
+      dom_path: domPath,
       tag: codevalAutoTrackConfig.tag
     });
   } catch (err) {
